@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Finance">
+<meta name="theme-color" content="#1a1a1a">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Finance Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{height:100%;background:#1a1a1a}
+body{background:#1a1a1a;color:#f0ede8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;min-height:100vh;min-height:-webkit-fill-available;-webkit-text-size-adjust:100%;overscroll-behavior:none}
+.app{max-width:480px;margin:0 auto;padding:0 0 100px}
+.tabs{display:flex;border-bottom:1px solid #333;position:sticky;top:0;background:#1a1a1a;z-index:10;padding-top:env(safe-area-inset-top)}
+.tab{flex:1;padding:14px 4px;text-align:center;font-size:13px;color:#888;cursor:pointer;border-bottom:2px solid transparent;-webkit-tap-highlight-color:transparent;user-select:none}
+.tab.active{color:#c4843a;border-bottom-color:#c4843a}
+.panel{display:none;padding:20px 16px}
+.panel.active{display:block}
+h2{font-size:16px;font-weight:500;margin-bottom:16px;color:#f0ede8}
+input,select{background:#252525;border:1px solid #333;border-radius:8px;color:#f0ede8;font-size:16px;padding:10px 12px;width:100%;outline:none;font-family:inherit;-webkit-appearance:none;appearance:none}
+input:focus,select:focus{border-color:#c4843a}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23888' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+input[type=number]{-moz-appearance:textfield;font-size:16px}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+input[type=date]::-webkit-calendar-picker-indicator{filter:invert(0.6)}
+.btn{border:1px solid #444;background:transparent;color:#f0ede8;padding:12px 16px;border-radius:8px;cursor:pointer;font-size:15px;font-family:inherit;-webkit-tap-highlight-color:transparent;user-select:none}
+.btn.amber{border-color:#c4843a;color:#c4843a}
+.btn.green{border-color:#4a7c59;color:#4a7c59}
+.btn.red{border-color:#883333;color:#cc5555}
+.btn.small{padding:10px 14px;font-size:14px}
+.row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.row input[type=number]{width:110px;flex-shrink:0}
+.row input[type=text]{flex:1}
+.del-btn{background:none;border:none;color:#666;cursor:pointer;font-size:22px;padding:4px 10px;line-height:1;flex-shrink:0;border-radius:6px;-webkit-tap-highlight-color:transparent}
+.total-bar{border-top:1px solid #333;margin-top:12px;padding-top:14px;display:flex;justify-content:space-between;align-items:center}
+.total-label{font-size:13px;color:#888}
+.total-val{font-size:22px;font-weight:500}
+.actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.confirm-msg{font-size:13px;color:#4a7c59;margin-top:8px;min-height:18px}
+.field{margin-bottom:12px}
+.field label{font-size:12px;color:#888;display:block;margin-bottom:5px;letter-spacing:.03em;text-transform:uppercase}
+.log-entry{background:#252525;border:1px solid #2e2e2e;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.entry-main{flex:1}
+.entry-type{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:.04em}
+.entry-amount{font-size:18px;font-weight:500;color:#f0ede8;margin:2px 0}
+.entry-amount.green{color:#4a7c59}
+.entry-date{font-size:12px;color:#666}
+.budget-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #2a2a2a}
+.budget-label{font-size:14px;color:#ccc}
+.budget-val input{width:130px;text-align:right;background:transparent;border:none;border-bottom:1px solid #444;border-radius:0;padding:4px 6px;font-size:16px;font-weight:500;color:#f0ede8;outline:none}
+.budget-val input:focus{border-bottom-color:#c4843a}
+.surplus-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+.surplus-label{font-size:14px;font-weight:500}
+.surplus-val{font-size:20px;font-weight:500;color:#4a7c59}
+.prog-block{margin-bottom:20px}
+.prog-header{display:flex;justify-content:space-between;margin-bottom:6px}
+.prog-label{font-size:13px;color:#aaa}
+.prog-pct{font-size:13px;font-weight:500}
+.prog-bar{background:#2a2a2a;border-radius:99px;height:8px;overflow:hidden}
+.prog-fill{height:100%;border-radius:99px;transition:width .4s}
+.prog-fill.amber{background:#c4843a}
+.prog-fill.green{background:#4a7c59}
+.stat-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+.stat-card{background:#252525;border:1px solid #2e2e2e;border-radius:12px;padding:14px}
+.stat-card .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#888;margin-bottom:6px}
+.stat-card .val{font-size:20px;font-weight:500}
+.stat-card .val.green{color:#4a7c59}
+.stat-card .val.amber{color:#c4843a}
+.plan-section{margin-bottom:24px}
+.alloc-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #2a2a2a;font-size:14px}
+.alloc-row:last-child{border-bottom:none}
+.alloc-name{color:#ccc}
+.alloc-amt{font-weight:500}
+.alloc-amt.green{color:#4a7c59}
+.alloc-amt.amber{color:#c4843a}
+.milestone{padding:8px 0;border-bottom:1px solid #2a2a2a;font-size:14px;color:#ccc;line-height:1.5}
+.milestone:last-child{border-bottom:none}
+.milestone span{color:#f0ede8;font-weight:500}
+.tips{border-left:3px solid #c4843a;border-radius:0 8px 8px 0;padding:12px 16px;background:#252525}
+.tips p{font-size:13px;color:#bbb;margin-bottom:8px;line-height:1.6}
+.tips p:last-child{margin-bottom:0}
+.empty{color:#666;font-size:13px;padding:8px 0}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('expenses')">Expenses</div>
+    <div class="tab" onclick="showTab('log')">Log</div>
+    <div class="tab" onclick="showTab('overview')">Overview</div>
+    <div class="tab" onclick="showTab('plan')">Plan</div>
+  </div>
+
+  <div id="panel-expenses" class="panel active">
+    <h2>Monthly Expenses</h2>
+    <div id="expense-rows"></div>
+    <button class="btn amber" style="width:100%;margin-bottom:4px" onclick="addExpenseRow()">+ Add Expense</button>
+    <div class="total-bar">
+      <span class="total-label">Total Spent</span>
+      <span class="total-val" id="expense-total">AED 0</span>
+    </div>
+    <div class="actions">
+      <button class="btn green small" onclick="saveExpenseToLog()">Save total to Log</button>
+      <button class="btn red small" onclick="resetExpenses()">Reset expenses</button>
+    </div>
+    <div class="confirm-msg" id="expense-confirm"></div>
+  </div>
+
+  <div id="panel-log" class="panel">
+    <h2>Log Entry</h2>
+    <div class="field">
+      <label>Type</label>
+      <select id="log-type">
+        <option value="VUAA Investment">VUAA Investment</option>
+        <option value="Emergency Fund">Emergency Fund</option>
+        <option value="Monthly Expenses">Monthly Expenses</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Amount (AED)</label>
+      <input type="number" id="log-amount" placeholder="0" min="0" inputmode="decimal">
+    </div>
+    <div class="field">
+      <label>Date</label>
+      <input type="date" id="log-date">
+    </div>
+    <div class="field">
+      <label>Note (optional)</label>
+      <input type="text" id="log-note" placeholder="e.g. Monthly DCA">
+    </div>
+    <button class="btn amber" style="width:100%" onclick="saveLogEntry()">Save Entry</button>
+    <div class="confirm-msg" id="log-confirm"></div>
+    <h2 style="margin-top:24px">History</h2>
+    <div id="log-history"></div>
+  </div>
+
+  <div id="panel-overview" class="panel">
+    <h2>Monthly Budget</h2>
+    <div class="budget-row">
+      <span class="budget-label">Salary</span>
+      <span class="budget-val"><input type="number" id="b-salary" placeholder="0" inputmode="decimal" oninput="updateBudget()"></span>
+    </div>
+    <div class="budget-row">
+      <span class="budget-label">Rent</span>
+      <span class="budget-val"><input type="number" id="b-rent" placeholder="0" inputmode="decimal" oninput="updateBudget()"></span>
+    </div>
+    <div class="budget-row">
+      <span class="budget-label">Remittance & Bills</span>
+      <span class="budget-val"><input type="number" id="b-bills" placeholder="0" inputmode="decimal" oninput="updateBudget()"></span>
+    </div>
+    <div class="budget-row">
+      <span class="budget-label">Living</span>
+      <span class="budget-val"><input type="number" id="b-living" placeholder="0" inputmode="decimal" oninput="updateBudget()"></span>
+    </div>
+    <div class="surplus-row">
+      <span class="surplus-label">Surplus</span>
+      <span class="surplus-val" id="surplus-val">AED 0</span>
+    </div>
+    <h2 style="margin-top:8px">Investment Progress</h2>
+    <div class="prog-block">
+      <div class="prog-header">
+        <span class="prog-label">Emergency Fund</span>
+        <span class="prog-pct amber" id="ef-pct">0%</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill amber" id="ef-bar" style="width:0%"></div></div>
+      <div style="font-size:12px;color:#666;margin-top:4px">Target: AED 36,000</div>
+    </div>
+    <div class="prog-block">
+      <div class="prog-header">
+        <span class="prog-label">VUAA Investment</span>
+        <span class="prog-pct green" id="vuaa-pct">0%</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill green" id="vuaa-bar" style="width:0%"></div></div>
+      <div style="font-size:12px;color:#666;margin-top:4px">Goal: AED 100,000</div>
+    </div>
+    <div class="stat-cards">
+      <div class="stat-card">
+        <div class="lbl">Total Invested</div>
+        <div class="val green" id="stat-vuaa">AED 0</div>
+      </div>
+      <div class="stat-card">
+        <div class="lbl">Emergency Fund</div>
+        <div class="val amber" id="stat-ef">AED 0</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-plan" class="panel">
+    <h2>Monthly Allocation</h2>
+    <div class="plan-section">
+      <div class="alloc-row">
+        <span class="alloc-name">VUAA Investment</span>
+        <span class="alloc-amt green">AED 3,000</span>
+      </div>
+      <div class="alloc-row">
+        <span class="alloc-name">Emergency Fund</span>
+        <span class="alloc-amt amber">AED 1,200</span>
+      </div>
+      <div class="alloc-row">
+        <span class="alloc-name">Remaining Surplus</span>
+        <span class="alloc-amt" style="color:#f0ede8">AED 4,200</span>
+      </div>
+    </div>
+    <h2>Milestones</h2>
+    <div class="plan-section">
+      <div class="milestone"><span>Emergency Fund fully funded</span> — 30 months at AED 1,200/mo</div>
+      <div class="milestone"><span>VUAA reaches AED 36,000</span> — 12 months at AED 3,000/mo</div>
+      <div class="milestone"><span>VUAA reaches AED 100,000</span> — 33 months at AED 3,000/mo</div>
+      <div class="milestone"><span>Review and rebalance</span> — Every 6 months</div>
+    </div>
+    <h2>Tips</h2>
+    <div class="tips">
+      <p>Automate transfers on payday so allocations happen before discretionary spending.</p>
+      <p>VUAA is a low-cost S&P 500 ETF accumulating — dividends reinvest automatically.</p>
+      <p>Emergency fund covers 3–6 months of expenses. AED 36,000 represents roughly 4 months at your living cost.</p>
+      <p>Once emergency fund is complete, redirect AED 1,200 into VUAA to accelerate growth.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const VER='v7';
+const K={expenses:VER+'_expenses',log:VER+'_log',budget:VER+'_budget'};
+
+function todayStr(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function fmtAED(n){return 'AED '+Number(n).toLocaleString('en',{minimumFractionDigits:0,maximumFractionDigits:0})}
+
+let expenses=[],logEntries=[],budget={};
+
+function loadAll(){
+  try{expenses=JSON.parse(localStorage.getItem(K.expenses)||'[]')}catch(e){expenses=[]}
+  try{logEntries=JSON.parse(localStorage.getItem(K.log)||'[]')}catch(e){logEntries=[]}
+  try{budget=JSON.parse(localStorage.getItem(K.budget)||'{}')}catch(e){budget={}}
+  budget={salary:'',rent:'',bills:'',living:'',...budget};
+}
+function saveExpenses(){localStorage.setItem(K.expenses,JSON.stringify(expenses))}
+function saveLog(){localStorage.setItem(K.log,JSON.stringify(logEntries))}
+function saveBudget(){localStorage.setItem(K.budget,JSON.stringify(budget))}
+
+function showTab(name){
+  const names=['expenses','log','overview','plan'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',names[i]===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+name));
+  if(name==='overview')renderOverview();
+  if(name==='log')renderLogHistory();
+}
+
+function renderExpenses(){
+  const cont=document.getElementById('expense-rows');
+  cont.innerHTML='';
+  expenses.forEach((ex,i)=>{
+    const row=document.createElement('div');row.className='row';
+    const amt=document.createElement('input');
+    amt.type='number';amt.placeholder='0';amt.value=ex.amount||'';amt.id='exp-amt-'+i;amt.inputMode='decimal';
+    amt.oninput=()=>{expenses[i].amount=parseFloat(amt.value)||0;saveExpenses();updateExpenseTotal()};
+    const nm=document.createElement('input');
+    nm.type='text';nm.placeholder='Name';nm.value=ex.name||'';
+    nm.oninput=()=>{expenses[i].name=nm.value;saveExpenses()};
+    const del=document.createElement('button');
+    del.className='del-btn';del.textContent='\u00d7';
+    del.onclick=()=>{expenses.splice(i,1);saveExpenses();renderExpenses()};
+    row.appendChild(amt);row.appendChild(nm);row.appendChild(del);
+    cont.appendChild(row);
+  });
+  updateExpenseTotal();
+}
+function updateExpenseTotal(){
+  document.getElementById('expense-total').textContent=fmtAED(expenses.reduce((s,e)=>s+(parseFloat(e.amount)||0),0));
+}
+function addExpenseRow(){
+  expenses.push({amount:'',name:''});saveExpenses();renderExpenses();
+  setTimeout(()=>{const el=document.getElementById('exp-amt-'+(expenses.length-1));if(el)el.focus()},50);
+}
+function resetExpenses(){expenses=[];saveExpenses();renderExpenses();document.getElementById('expense-confirm').textContent='';}
+function saveExpenseToLog(){
+  const total=expenses.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  logEntries.unshift({id:Date.now(),type:'Monthly Expenses',amount:total,date:todayStr(),note:'From expenses tab'});
+  saveLog();
+  const msg=document.getElementById('expense-confirm');
+  msg.textContent='Saved '+fmtAED(total)+' to Log.';
+  setTimeout(()=>{msg.textContent=''},3000);
+}
+
+function renderLogHistory(){
+  const cont=document.getElementById('log-history');
+  if(!logEntries.length){cont.innerHTML='<p class="empty">No entries yet.</p>';return}
+  cont.innerHTML='';
+  logEntries.forEach((e,i)=>{
+    const el=document.createElement('div');el.className='log-entry';
+    const isGreen=e.type==='VUAA Investment'||e.type==='Emergency Fund';
+    el.innerHTML='<div class="entry-main"><div class="entry-type">'+e.type+'</div><div class="entry-amount'+(isGreen?' green':'')+'">'+fmtAED(e.amount)+'</div><div class="entry-date">'+(e.date||'')+(e.note?'  \u00b7  '+e.note:'')+'</div></div>';
+    const del=document.createElement('button');del.className='del-btn';del.textContent='\u00d7';
+    del.onclick=()=>{logEntries.splice(i,1);saveLog();renderLogHistory();};
+    el.appendChild(del);cont.appendChild(el);
+  });
+}
+function saveLogEntry(){
+  const type=document.getElementById('log-type').value;
+  const amount=parseFloat(document.getElementById('log-amount').value)||0;
+  const date=document.getElementById('log-date').value||todayStr();
+  const note=document.getElementById('log-note').value.trim();
+  if(!amount){const m=document.getElementById('log-confirm');m.textContent='Enter an amount.';m.style.color='#cc5555';setTimeout(()=>{m.textContent=''},2000);return}
+  logEntries.unshift({id:Date.now(),type,amount,date,note});saveLog();
+  document.getElementById('log-amount').value='';
+  document.getElementById('log-note').value='';
+  document.getElementById('log-date').value=todayStr();
+  const m=document.getElementById('log-confirm');m.style.color='#4a7c59';m.textContent='Entry saved.';
+  setTimeout(()=>{m.textContent=''},2000);
+  renderLogHistory();
+}
+
+function updateBudget(){
+  budget.salary=document.getElementById('b-salary').value;
+  budget.rent=document.getElementById('b-rent').value;
+  budget.bills=document.getElementById('b-bills').value;
+  budget.living=document.getElementById('b-living').value;
+  saveBudget();
+  const salary=parseFloat(budget.salary)||0;
+  const exp=(parseFloat(budget.rent)||0)+(parseFloat(budget.bills)||0)+(parseFloat(budget.living)||0);
+  document.getElementById('surplus-val').textContent=fmtAED(salary-exp);
+}
+function renderOverview(){
+  document.getElementById('b-salary').value=budget.salary||'';
+  document.getElementById('b-rent').value=budget.rent||'';
+  document.getElementById('b-bills').value=budget.bills||'';
+  document.getElementById('b-living').value=budget.living||'';
+  updateBudget();
+  const vuaaTotal=logEntries.filter(e=>e.type==='VUAA Investment').reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const efTotal=logEntries.filter(e=>e.type==='Emergency Fund').reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const efPct=Math.min(100,Math.round(efTotal/36000*100));
+  const vuaaPct=Math.min(100,Math.round(vuaaTotal/100000*100));
+  document.getElementById('ef-pct').textContent=efPct+'%';
+  document.getElementById('ef-bar').style.width=efPct+'%';
+  document.getElementById('vuaa-pct').textContent=vuaaPct+'%';
+  document.getElementById('vuaa-bar').style.width=vuaaPct+'%';
+  document.getElementById('stat-vuaa').textContent=fmtAED(vuaaTotal);
+  document.getElementById('stat-ef').textContent=fmtAED(efTotal);
+}
+
+loadAll();
+renderExpenses();
+document.getElementById('log-date').value=todayStr();
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+</html>
